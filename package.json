@@ -1,0 +1,15 @@
+{
+  "name": "codemie_demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "mcp:filesystem": "node mcp/servers/filesystem-server.js",
+    "mcp:shell": "node mcp/servers/shell-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

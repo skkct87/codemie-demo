@@ -1,0 +1,12 @@
+{
+    "servers": {
+    "filesystem": {
+      "command": "node",
+      "args": ["mcp/servers/filesystem-server.js"]
+    },
+    "shell": {
+      "command": "node",
+      "args": ["mcp/servers/shell-server.js"]
+    }
+  }
+}
