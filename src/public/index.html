@@ -120,6 +120,7 @@
 
   <footer>© Tour Booking • Single Page Demo</footer>
 
+  <script src="vendor/jspdf.umd.min.js"></script>
   <script>
     const pkgSelect = document.getElementById("package");
     const travellersInput = document.getElementById("travellers");
@@ -193,8 +194,6 @@
       const total = pkg.price * travellers;
 
       const lines = [
-        "Tour Brochure",
-        "",
         `Package: ${pkg.name}`,
         `Travellers: ${travellers}`,
         `Price per traveller: ${formatINR(pkg.price)}`,
@@ -205,11 +204,24 @@
         "Email: tours@example.com",
       ];
 
-      const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(18);
+      doc.text("Tour Brochure", 14, 20);
+
+      doc.setFontSize(12);
+      let y = 35;
+      for (const line of lines) {
+        doc.text(line, 14, y);
+        y += 8;
+      }
+
+      const blob = doc.output("blob");
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "brochure.txt";
+      link.download = "tour-brochure.pdf";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

@@ -66,11 +66,15 @@ test.describe('CCD-20 Tour Booking & Summary Interface', () => {
       tourBookingPage.downloadBrochureButton.click(),
     ])
 
+    expect(download.suggestedFilename()).toBe('tour-brochure.pdf')
+
     const savedPath = path.join(DOWNLOAD_DIR, download.suggestedFilename())
     await download.saveAs(savedPath)
 
-    expect(path.extname(savedPath)).toBe('.txt')
-    expect(fs.statSync(savedPath).size).toBeGreaterThan(0)
+    expect(path.extname(savedPath)).toBe('.pdf')
+    const contents = fs.readFileSync(savedPath)
+    expect(contents.length).toBeGreaterThan(0)
+    expect(contents.subarray(0, 5).toString('ascii')).toBe('%PDF-')
   })
 
   test('clears the form after Reset is clicked', async ({ page }) => {

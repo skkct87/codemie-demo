@@ -66,14 +66,30 @@ describe('saveBrochurePdf', () => {
     vi.restoreAllMocks()
   })
 
-  it('creates a download link for the generated PDF blob', async () => {
+  it('creates a download link for the generated PDF blob, defaulting to tour-brochure.pdf', async () => {
     const { saveBrochurePdf } = await import('./brochurePdf')
+
+    let capturedDownload = ''
+    const originalCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = originalCreateElement(tag)
+      if (tag === 'a') {
+        Object.defineProperty(el, 'download', {
+          get: () => capturedDownload,
+          set: (value: string) => {
+            capturedDownload = value
+          },
+        })
+      }
+      return el
+    })
 
     await saveBrochurePdf(brochureData)
 
     expect(createObjectURLMock).toHaveBeenCalledTimes(1)
     expect(clickMock).toHaveBeenCalledTimes(1)
     expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:mock-url')
+    expect(capturedDownload).toBe('tour-brochure.pdf')
   })
 
   it('propagates errors when PDF generation fails', async () => {

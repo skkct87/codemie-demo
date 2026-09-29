@@ -37,7 +37,7 @@ export async function createBrochurePdfBlob(data: BrochureData): Promise<Blob> {
 
 export async function saveBrochurePdf(
   data: BrochureData,
-  filename = 'brochure.pdf',
+  filename = 'tour-brochure.pdf',
 ): Promise<void> {
   const blob = await createBrochurePdfBlob(data)
   const url = URL.createObjectURL(blob)
