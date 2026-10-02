@@ -21,6 +21,10 @@ export class TourBookingPage {
   readonly downloadBrochureButton: Locator
   readonly bookingMessage: Locator
 
+  readonly supportCard: Locator
+  readonly downloadBrochureCard: Locator
+  readonly downloadBrochureSubtext: Locator
+
   readonly packagePill: Locator
   readonly priceText: Locator
   readonly travellerCalcText: Locator
@@ -48,6 +52,12 @@ export class TourBookingPage {
     this.resetButton = page.getByRole('button', { name: 'Reset' })
     this.downloadBrochureButton = page.getByRole('button', { name: 'Download Brochure' })
     this.bookingMessage = page.locator('#message')
+
+    this.supportCard = page.locator('.box').filter({ has: this.supportHeading })
+    this.downloadBrochureCard = page.locator('.box').filter({ has: this.downloadBrochureHeading })
+    this.downloadBrochureSubtext = this.downloadBrochureCard.getByText('Download brochure', {
+      exact: true,
+    })
 
     this.packagePill = page.locator('#pkgLabel')
     this.priceText = page.locator('#price')

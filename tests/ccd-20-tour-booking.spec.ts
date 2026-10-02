@@ -101,3 +101,77 @@ test.describe('CCD-20 Tour Booking & Summary Interface', () => {
     await expect(tourBookingPage.packageSelect).toHaveValue('goa')
   })
 })
+
+test.describe('CCD-46 Download Brochure card', () => {
+  test('AC1: the right column has a card titled Download Brochure', async ({ page }) => {
+    const tourBookingPage = new TourBookingPage(page)
+
+    await expect(tourBookingPage.downloadBrochureCard).toHaveCount(1)
+    await expect(tourBookingPage.downloadBrochureCard.getByRole('heading')).toHaveText(
+      'Download Brochure',
+    )
+  })
+
+  test('AC2: the card has a primary blue Download Brochure button', async ({ page }) => {
+    const tourBookingPage = new TourBookingPage(page)
+    const button = tourBookingPage.downloadBrochureCard.getByRole('button', {
+      name: 'Download Brochure',
+    })
+
+    await expect(button).toBeVisible()
+    await expect(button).toHaveCSS('background-color', 'rgb(11, 94, 215)')
+    await expect(button).toHaveCSS('color', 'rgb(255, 255, 255)')
+  })
+
+  test('AC3: the card shows the subtext "Download brochure"', async ({ page }) => {
+    const tourBookingPage = new TourBookingPage(page)
+
+    await expect(tourBookingPage.downloadBrochureSubtext).toBeVisible()
+  })
+
+  test('AC4: the card has rounded corners, padding and a drop shadow', async ({ page }) => {
+    const tourBookingPage = new TourBookingPage(page)
+    const card = tourBookingPage.downloadBrochureCard
+
+    const styles = await card.evaluate((el) => {
+      const s = getComputedStyle(el)
+      return {
+        boxShadow: s.boxShadow,
+        borderRadius: parseFloat(s.borderRadius),
+        paddingTop: parseFloat(s.paddingTop),
+        paddingRight: parseFloat(s.paddingRight),
+        paddingBottom: parseFloat(s.paddingBottom),
+        paddingLeft: parseFloat(s.paddingLeft),
+      }
+    })
+
+    expect(styles.borderRadius).toBeGreaterThan(0)
+    expect(styles.paddingTop).toBeGreaterThan(0)
+    expect(styles.paddingRight).toBeGreaterThan(0)
+    expect(styles.paddingBottom).toBeGreaterThan(0)
+    expect(styles.paddingLeft).toBeGreaterThan(0)
+    expect(styles.boxShadow).not.toBe('none')
+  })
+
+  test('AC4: the card uses the same shadow as the Support card', async ({ page }) => {
+    const tourBookingPage = new TourBookingPage(page)
+
+    const shadowOf = (locator: typeof tourBookingPage.supportCard) =>
+      locator.evaluate((el) => getComputedStyle(el).boxShadow)
+
+    expect(await shadowOf(tourBookingPage.downloadBrochureCard)).toBe(
+      await shadowOf(tourBookingPage.supportCard),
+    )
+  })
+
+  test('the card sits below the Support card in the right column', async ({ page }) => {
+    const tourBookingPage = new TourBookingPage(page)
+
+    const support = await tourBookingPage.supportCard.boundingBox()
+    const brochure = await tourBookingPage.downloadBrochureCard.boundingBox()
+
+    expect(support).not.toBeNull()
+    expect(brochure).not.toBeNull()
+    expect(brochure!.y).toBeGreaterThanOrEqual(support!.y + support!.height)
+  })
+})
