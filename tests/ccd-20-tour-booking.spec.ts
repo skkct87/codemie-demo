@@ -388,3 +388,73 @@ test.describe('CCD-49 Footer copy', () => {
     expect(box!.y).toBeGreaterThanOrEqual(lastContent!.y + lastContent!.height)
   })
 })
+
+test.describe('CCD-50 Header branding text', () => {
+  test('AC1: "XYZ-Tour Company" is visible in the header on page load', async ({ page }) => {
+    const company = page.locator('header .company-name')
+
+    await expect(company).toBeVisible()
+    expect(await company.textContent()).toBe('XYZ-Tour Company')
+  })
+
+  test('AC2: the company name is white on the blue header bar, above the title, aligned with it', async ({
+    page,
+  }) => {
+    const header = page.locator('header')
+    const company = page.locator('header .company-name')
+    const title = page.locator('header h1')
+
+    await expect(header).toHaveCSS('background-color', 'rgb(11, 94, 215)')
+    await expect(company).toHaveCSS('color', 'rgb(255, 255, 255)')
+    await expect(title).toHaveCSS('color', 'rgb(255, 255, 255)')
+    await expect(company).toHaveCSS('font-weight', '700')
+
+    const companyBox = await company.boundingBox()
+    const titleBox = await title.boundingBox()
+    expect(companyBox).not.toBeNull()
+    expect(titleBox).not.toBeNull()
+    expect(companyBox!.y + companyBox!.height).toBeLessThanOrEqual(titleBox!.y)
+    expect(companyBox!.x).toBeCloseTo(titleBox!.x, 0)
+    expect(companyBox!.height).toBeGreaterThan(0)
+  })
+
+  test('AC4: the header is a semantic <header> with a single <h1>, and the company name is not a heading', async ({
+    page,
+  }) => {
+    await expect(page.locator('header')).toHaveCount(1)
+    await expect(page.locator('h1')).toHaveCount(1)
+    await expect(page.locator('header h1')).toHaveText('Tour Booking (One Page Application)')
+    await expect(page.getByRole('heading', { name: 'XYZ-Tour Company' })).toHaveCount(0)
+    await expect(page.locator('header .company-name')).toHaveJSProperty('tagName', 'DIV')
+  })
+
+  for (const width of [360, 768, 1024, 1280]) {
+    test(`AC3: header lines do not overlap or overflow at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+
+      const header = page.locator('header')
+      const company = page.locator('header .company-name')
+      const title = page.locator('header h1')
+      const headerBox = await header.boundingBox()
+      const companyBox = await company.boundingBox()
+      const titleBox = await title.boundingBox()
+
+      expect(headerBox).not.toBeNull()
+      expect(companyBox).not.toBeNull()
+      expect(titleBox).not.toBeNull()
+
+      expect(companyBox!.y + companyBox!.height).toBeLessThanOrEqual(titleBox!.y)
+      for (const box of [companyBox!, titleBox!]) {
+        expect(box.x).toBeGreaterThanOrEqual(headerBox!.x)
+        expect(box.x + box.width).toBeLessThanOrEqual(headerBox!.x + headerBox!.width)
+        expect(box.y).toBeGreaterThanOrEqual(headerBox!.y)
+        expect(box.y + box.height).toBeLessThanOrEqual(headerBox!.y + headerBox!.height)
+      }
+
+      const overflows = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      )
+      expect(overflows).toBe(false)
+    })
+  }
+})

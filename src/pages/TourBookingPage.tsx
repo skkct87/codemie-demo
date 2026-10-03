@@ -27,8 +27,11 @@ export default function TourBookingPage() {
 
   return (
     <>
-      <header>
-        <h1>Tour Booking</h1>
+      <header className="app-header">
+        <div className="header-inner">
+          <div className="company-name">XYZ-Tour Company</div>
+          <h1 className="app-title">Tour Booking</h1>
+        </div>
       </header>
 
       <div className="container">

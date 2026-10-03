@@ -15,6 +15,20 @@ header h1 {
   font-size: 20px;
 }
 
+.company-name {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .company-name {
+    font-size: 20px;
+  }
+}
+
 .container {
   max-width: 980px;
   margin: 18px auto;
