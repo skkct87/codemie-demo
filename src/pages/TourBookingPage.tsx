@@ -50,7 +50,7 @@ export default function TourBookingPage() {
         </div>
       </div>
 
-      <footer>Tour Booking - Demo</footer>
+      <footer>© Tour Booking - Single Page Demo</footer>
     </>
   )
 }

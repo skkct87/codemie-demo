@@ -366,3 +366,25 @@ test.describe('CCD-47 Travel Date dd-mm-yyyy with calendar icon', () => {
     await expect(page.getByLabel('Travel Date')).toHaveAttribute('id', 'date')
   })
 })
+
+test.describe('CCD-49 Footer copy', () => {
+  test('AC2: the footer text is exactly "© Tour Booking - Single Page Demo"', async ({ page }) => {
+    const footer = page.locator('footer')
+
+    await expect(footer).toHaveCount(1)
+    expect(await footer.textContent()).toBe('© Tour Booking - Single Page Demo')
+  })
+
+  test('AC1: the footer is centered at the bottom in muted grey text', async ({ page }) => {
+    const footer = page.locator('footer')
+
+    await expect(footer).toHaveCSS('text-align', 'center')
+    await expect(footer).toHaveCSS('color', 'rgb(102, 102, 102)')
+
+    const box = await footer.boundingBox()
+    const lastContent = await page.locator('.container').boundingBox()
+    expect(box).not.toBeNull()
+    expect(lastContent).not.toBeNull()
+    expect(box!.y).toBeGreaterThanOrEqual(lastContent!.y + lastContent!.height)
+  })
+})
