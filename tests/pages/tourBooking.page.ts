@@ -13,6 +13,9 @@ export class TourBookingPage {
   readonly emailInput: Locator
   readonly packageSelect: Locator
   readonly dateInput: Locator
+  readonly datePickerButton: Locator
+  readonly datePickerInput: Locator
+  readonly dateError: Locator
   readonly travellersInput: Locator
   readonly notesInput: Locator
 
@@ -45,6 +48,9 @@ export class TourBookingPage {
     this.emailInput = page.getByPlaceholder('Enter email')
     this.packageSelect = page.getByRole('combobox')
     this.dateInput = page.locator('#date')
+    this.datePickerButton = page.getByRole('button', { name: 'Open calendar' })
+    this.datePickerInput = page.locator('#datePicker')
+    this.dateError = page.locator('#dateError')
     this.travellersInput = page.locator('#travellers')
     this.notesInput = page.getByPlaceholder('Pickup city, hotel preference, etc.')
 

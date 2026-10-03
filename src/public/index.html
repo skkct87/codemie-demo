@@ -18,6 +18,20 @@
       border:1px solid #d8d8d8; border-radius:10px; font-size:14px;
     }
     textarea { min-height: 80px; resize: vertical; }
+    .date-field { position:relative; margin-top:6px; }
+    .date-field input { margin-top:0; }
+    .date-field #date { padding-right:44px; }
+    .date-field input[aria-invalid="true"] { border-color:#b42318; }
+    .date-picker-btn {
+      position:absolute; top:0; right:0; bottom:0; width:42px; padding:0; border:0;
+      border-radius:0 10px 10px 0; background:transparent; color:#0b5ed7; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .date-field .date-native {
+      position:absolute; left:0; bottom:0; width:100%; height:1px; padding:0; border:0;
+      opacity:0; pointer-events:none;
+    }
+    .error-text { color:#b42318; font-size:13px; margin-top:8px; }
     .row { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
     .btn { border:none; border-radius:10px; padding:10px 12px; cursor:pointer; font-weight:600; }
     .btn-primary { background:#0b5ed7; color:#fff; }
@@ -74,8 +88,20 @@
 
         <div class="row">
           <div>
-            <label>Travel Date</label>
-            <input id="date" type="date" />
+            <label for="date">Travel Date</label>
+            <div class="date-field">
+              <input id="date" type="text" inputmode="numeric" autocomplete="off" placeholder="dd-mm-yyyy" maxlength="10" />
+              <button type="button" class="date-picker-btn" id="datePickerBtn" aria-label="Open calendar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </button>
+              <input id="datePicker" class="date-native" type="date" tabindex="-1" aria-hidden="true" />
+            </div>
+            <div id="dateError" class="error-text" role="alert" hidden></div>
           </div>
           <div>
             <label>Travellers</label>
@@ -151,11 +177,98 @@
       calcText.textContent = `For ${t} traveller${t > 1 ? "s" : ""}`;
     }
 
+    const dateInput = document.getElementById("date");
+    const datePicker = document.getElementById("datePicker");
+    const datePickerBtn = document.getElementById("datePickerBtn");
+    const dateError = document.getElementById("dateError");
+
+    // Keep in sync with src/lib/travelDate.ts
+    const DATE_FORMAT_ERROR = "Enter the travel date in dd-mm-yyyy format.";
+    const DATE_INVALID_ERROR = "Enter a valid date.";
+    const DATE_PAST_ERROR = "Travel date cannot be in the past.";
+
+    function pad(n, width){ return String(n).padStart(width, "0"); }
+
+    function todayIso(){
+      const now = new Date();
+      return `${pad(now.getFullYear(), 4)}-${pad(now.getMonth() + 1, 2)}-${pad(now.getDate(), 2)}`;
+    }
+
+    function daysInMonth(year, month){
+      if(month === 2){
+        const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+        return leap ? 29 : 28;
+      }
+      return [4, 6, 9, 11].includes(month) ? 30 : 31;
+    }
+
+    function parseTravelDate(text){
+      const match = /^(\d{2})-(\d{2})-(\d{4})$/.exec(text.trim());
+      if(!match) return { ok:false, error:DATE_FORMAT_ERROR };
+
+      const day = Number(match[1]);
+      const month = Number(match[2]);
+      const year = Number(match[3]);
+      if(year < 1 || month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month)){
+        return { ok:false, error:DATE_INVALID_ERROR };
+      }
+
+      const iso = `${match[3]}-${match[2]}-${match[1]}`;
+      if(iso < todayIso()) return { ok:false, error:DATE_PAST_ERROR };
+      return { ok:true, iso };
+    }
+
+    function showDateError(text){
+      dateError.textContent = text || "";
+      dateError.hidden = !text;
+      if(text){
+        dateInput.setAttribute("aria-invalid", "true");
+        dateInput.setAttribute("aria-describedby", "dateError");
+      } else {
+        dateInput.removeAttribute("aria-invalid");
+        dateInput.removeAttribute("aria-describedby");
+      }
+    }
+
+    datePicker.min = todayIso();
+
+    dateInput.addEventListener("input", () => {
+      const result = parseTravelDate(dateInput.value);
+      datePicker.value = result.ok ? result.iso : "";
+      if(result.ok) showDateError("");
+    });
+
+    dateInput.addEventListener("blur", () => {
+      if(!dateInput.value.trim()){ showDateError(""); return; }
+      const result = parseTravelDate(dateInput.value);
+      showDateError(result.ok ? "" : result.error);
+    });
+
+    datePickerBtn.addEventListener("click", () => {
+      datePicker.min = todayIso();
+      if(typeof datePicker.showPicker === "function") datePicker.showPicker();
+      else datePicker.focus();
+    });
+
+    datePicker.addEventListener("change", () => {
+      if(!datePicker.value) return;
+      const [year, month, day] = datePicker.value.split("-");
+      dateInput.value = `${day}-${month}-${year}`;
+      dateInput.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
     document.getElementById("bookBtn").addEventListener("click", () => {
       const name = document.getElementById("name").value.trim();
       const mobile = document.getElementById("mobile").value.trim();
       const email = document.getElementById("email").value.trim();
-      const date = document.getElementById("date").value;
+      const date = dateInput.value.trim();
+
+      const dateResult = parseTravelDate(date);
+      if(date && !dateResult.ok){
+        showDateError(dateResult.error);
+        message.innerHTML = "";
+        return;
+      }
 
       if(!name || !mobile || !email || !date){
         message.innerHTML = `<div style="color:#b42318;">Please fill Name, Mobile, Email, and Travel Date.</div>`;
@@ -180,6 +293,7 @@
       });
       pkgSelect.value = "goa";
       message.innerHTML = "";
+      showDateError("");
       updateSummary();
     });
 

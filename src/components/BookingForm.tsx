@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { PACKAGES } from '../data/packages'
+import { isoToDisplay, parseTravelDate, todayIso } from '../lib/travelDate'
 
 interface BookingFormProps {
   packageId: string
@@ -23,9 +24,47 @@ export default function BookingForm({
   const [email, setEmail] = useState('')
   const [notes, setNotes] = useState('')
   const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null)
+  const [dateText, setDateText] = useState('')
+  const [dateError, setDateError] = useState<string | null>(null)
+  const datePickerRef = useRef<HTMLInputElement>(null)
+
+  function handleDateTextChange(text: string) {
+    setDateText(text)
+    const result = parseTravelDate(text)
+    onTravelDateChange(result.ok ? result.iso : '')
+    if (result.ok) setDateError(null)
+  }
+
+  function handleDateBlur() {
+    if (!dateText.trim()) {
+      setDateError(null)
+      return
+    }
+    const result = parseTravelDate(dateText)
+    setDateError(result.ok ? null : result.error)
+  }
+
+  function handleDatePicked(iso: string) {
+    if (!iso) return
+    handleDateTextChange(isoToDisplay(iso))
+  }
+
+  function openDatePicker() {
+    const picker = datePickerRef.current
+    if (!picker) return
+    if (typeof picker.showPicker === 'function') picker.showPicker()
+    else picker.focus()
+  }
 
   function handleConfirm() {
-    if (!name.trim() || !mobile.trim() || !email.trim() || !travelDate) {
+    const dateResult = parseTravelDate(dateText)
+    if (dateText.trim() && !dateResult.ok) {
+      setDateError(dateResult.error)
+      setMessage(null)
+      return
+    }
+
+    if (!name.trim() || !mobile.trim() || !email.trim() || !dateText.trim()) {
       setMessage({ text: 'Please fill Name, Mobile, Email, and Travel Date.', isError: true })
       return
     }
@@ -39,6 +78,8 @@ export default function BookingForm({
     setEmail('')
     setNotes('')
     setMessage(null)
+    setDateText('')
+    setDateError(null)
     onTravellersChange(1)
     onTravelDateChange('')
     onPackageChange(PACKAGES[0].id)
@@ -98,12 +139,60 @@ export default function BookingForm({
       <div className="row">
         <div>
           <label htmlFor="date">Travel Date</label>
-          <input
-            id="date"
-            type="date"
-            value={travelDate}
-            onChange={(e) => onTravelDateChange(e.target.value)}
-          />
+          <div className="date-field">
+            <input
+              id="date"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="dd-mm-yyyy"
+              maxLength={10}
+              value={dateText}
+              aria-invalid={dateError ? true : undefined}
+              aria-describedby={dateError ? 'date-error' : undefined}
+              onChange={(e) => handleDateTextChange(e.target.value)}
+              onBlur={handleDateBlur}
+            />
+            <button
+              type="button"
+              className="date-picker-btn"
+              aria-label="Open calendar"
+              onClick={openDatePicker}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </button>
+            <input
+              ref={datePickerRef}
+              id="date-picker"
+              className="date-native"
+              type="date"
+              tabIndex={-1}
+              aria-hidden="true"
+              min={todayIso()}
+              value={travelDate}
+              onChange={(e) => handleDatePicked(e.target.value)}
+            />
+          </div>
+          {dateError && (
+            <div id="date-error" className="error-text" role="alert">
+              {dateError}
+            </div>
+          )}
         </div>
         <div>
           <label htmlFor="travellers">Travellers</label>
