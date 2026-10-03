@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import BookingForm from './BookingForm'
 import { PACKAGES } from '../data/packages'
 import { todayIso } from '../lib/travelDate'
@@ -39,6 +39,17 @@ async function fillContact(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe('BookingForm Travel Date (CCD-47)', () => {
+  const originalShowPicker = HTMLInputElement.prototype.showPicker
+
+  afterEach(() => {
+    if (originalShowPicker === undefined) {
+      // jsdom does not implement showPicker, so remove the stub entirely
+      delete (HTMLInputElement.prototype as Partial<HTMLInputElement>).showPicker
+    } else {
+      HTMLInputElement.prototype.showPicker = originalShowPicker
+    }
+  })
+
   it('shows the dd-mm-yyyy placeholder and an accessible calendar button', () => {
     render(<Harness />)
 

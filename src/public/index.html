@@ -278,12 +278,19 @@
       const pkg = packages[pkgSelect.value].name;
       const travellers = travellersInput.value;
 
-      message.innerHTML = `
-        <div style="color:#067647; font-weight:700;">Booking Confirmed</div>
-        <div class="muted">Package: ${pkg}</div>
-        <div class="muted">Travellers: ${travellers}</div>
-        <div class="muted">Travel Date: ${date}</div>
-      `;
+      const confirmed = document.createElement("div");
+      confirmed.style.color = "#067647";
+      confirmed.style.fontWeight = "700";
+      confirmed.textContent = "Booking Confirmed";
+
+      const details = [`Package: ${pkg}`, `Travellers: ${travellers}`, `Travel Date: ${date}`].map(text => {
+        const line = document.createElement("div");
+        line.className = "muted";
+        line.textContent = text;
+        return line;
+      });
+
+      message.replaceChildren(confirmed, ...details);
     });
 
     document.getElementById("resetBtn").addEventListener("click", () => {
